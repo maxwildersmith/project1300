@@ -1,20 +1,12 @@
 package Game;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.Timer;
-
 import Game.Shape.Tetrominoe;
 
-public class Board extends JPanel
-        implements ActionListener {
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+
+public class Board extends JPanel implements ActionListener {
 
     private final int BOARD_WIDTH = 10;
     private final int BOARD_HEIGHT = 22;
@@ -244,7 +236,7 @@ public class Board extends JPanel
         if (numFullLines > 0) {
 
             numLinesRemoved += numFullLines;
-            statusbar.setText(String.valueOf(numLinesRemoved));
+            statusbar.setText(numLinesRemoved + " lines cleared");
             isFallingFinished = true;
             curPiece.setShape(Tetrominoe.NoShape);
             repaint();
@@ -317,7 +309,7 @@ public class Board extends JPanel
                     dropDown();
                     break;
 
-                case 'D':
+                case 'R':
                     oneLineDown();
                     break;
             }

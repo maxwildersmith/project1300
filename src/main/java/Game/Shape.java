@@ -8,7 +8,7 @@ public class Shape {
 
     private Tetrominoe pieceShape;
     private int coords[][];
-    private int[][][] coordsTable;
+    private int[][][] shapeList;
 
 
     public Shape() {
@@ -19,7 +19,7 @@ public class Shape {
 
     public void setShape(Tetrominoe shape) {
 
-        coordsTable = new int[][][] {
+        shapeList = new int[][][] {
                 { { 0, 0 },   { 0, 0 },   { 0, 0 },   { 0, 0 } },
                 { { 0, -1 },  { 0, 0 },   { -1, 0 },  { -1, 1 } },
                 { { 0, -1 },  { 0, 0 },   { 1, 0 },   { 1, 1 } },
@@ -30,13 +30,9 @@ public class Shape {
                 { { 1, -1 },  { 0, -1 },  { 0, 0 },   { 0, 1 } }
         };
 
-        for (int i = 0; i < 4 ; i++) {
-
-            for (int j = 0; j < 2; ++j) {
-
-                coords[i][j] = coordsTable[shape.ordinal()][i][j];
-            }
-        }
+        for (int i = 0; i < 4 ; i++)
+            for (int j = 0; j < 2; ++j)
+                coords[i][j] = shapeList[shape.ordinal()][i][j];
 
         pieceShape = shape;
     }
@@ -59,10 +55,8 @@ public class Shape {
 
         int m = coords[0][0];
 
-        for (int i=0; i < 4; i++) {
-
+        for (int i=0; i < 4; i++)
             m = Math.min(m, coords[i][0]);
-        }
 
         return m;
     }
@@ -72,10 +66,8 @@ public class Shape {
 
         int m = coords[0][1];
 
-        for (int i=0; i < 4; i++) {
-
+        for (int i=0; i < 4; i++)
             m = Math.min(m, coords[i][1]);
-        }
 
         return m;
     }
@@ -89,7 +81,6 @@ public class Shape {
         result.pieceShape = pieceShape;
 
         for (int i = 0; i < 4; ++i) {
-
             result.setX(i, y(i));
             result.setY(i, -x(i));
         }
@@ -106,7 +97,6 @@ public class Shape {
         result.pieceShape = pieceShape;
 
         for (int i = 0; i < 4; ++i) {
-
             result.setX(i, -y(i));
             result.setY(i, x(i));
         }
