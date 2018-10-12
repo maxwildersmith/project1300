@@ -9,8 +9,8 @@
         <module name="project1300" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel target="9">
-      <module name="project1300" target="1.8" />
-    </bytecodeTargetLevel>
+    <bytecodeTargetLevel target="9" />
+  </component>
+  <component name="JavacSettings">
   </component>
 </project>
