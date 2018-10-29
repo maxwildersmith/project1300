@@ -11,6 +11,4 @@
     </annotationProcessing>
     <bytecodeTargetLevel target="9" />
   </component>
-  <component name="JavacSettings">
-  </component>
 </project>

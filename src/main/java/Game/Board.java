@@ -11,6 +11,7 @@ public class Board extends JPanel implements ActionListener {
     private final int BOARD_WIDTH = 10;
     private final int BOARD_HEIGHT = 22;
     private final int DELAY = 400;
+    private final boolean DATA_VIEW = true;
 
     private Timer timer;
     private boolean isFallingFinished = false;
@@ -95,6 +96,7 @@ public class Board extends JPanel implements ActionListener {
 
     private void doDrawing(Graphics g) {
 
+
         Dimension size = getSize();
         int boardTop = (int) size.getHeight() - BOARD_HEIGHT * squareHeight();
 
@@ -107,6 +109,8 @@ public class Board extends JPanel implements ActionListener {
                 if (shape != Tetrominoe.NoShape)
                     drawSquare(g, 0 + j * squareWidth(),
                             boardTop + i * squareHeight(), shape);
+                else if(DATA_VIEW)
+                    g.drawString("0",0 + j * squareWidth()+6,boardTop + i * squareHeight()-2);
             }
         }
 
@@ -120,6 +124,14 @@ public class Board extends JPanel implements ActionListener {
                         boardTop + (BOARD_HEIGHT - y - 1) * squareHeight(),
                         curPiece.getShape());
             }
+        }
+        if(DATA_VIEW) {
+            for (int col = 0; col < getSize().getWidth(); col += squareWidth()) {
+                g.drawLine(col, 0, col, BOARD_HEIGHT*squareHeight());
+                System.out.println(col);
+            }
+            for (int row = 0; row < getSize().getHeight(); row += squareHeight())
+                g.drawLine(0, row, BOARD_WIDTH*squareWidth(), row);
         }
     }
 
@@ -251,60 +263,52 @@ public class Board extends JPanel implements ActionListener {
                 new Color(102, 204, 204), new Color(218, 170, 0)
         };
 
-        Color color = colors[shape.ordinal()];
+        if(!DATA_VIEW) {
+            Color color = colors[shape.ordinal()];
 
-        g.setColor(color);
-        g.fillRect(x + 1, y + 1, squareWidth() - 2, squareHeight() - 2);
+            g.setColor(color);
+            g.fillRect(x + 1, y + 1, squareWidth() - 2, squareHeight() - 2);
 
-        g.setColor(color.brighter());
-        g.drawLine(x, y + squareHeight() - 1, x, y);
-        g.drawLine(x, y, x + squareWidth() - 1, y);
+            g.setColor(color.brighter());
+            g.drawLine(x, y + squareHeight() - 1, x, y);
+            g.drawLine(x, y, x + squareWidth() - 1, y);
 
-        g.setColor(color.darker());
-        g.drawLine(x + 1, y + squareHeight() - 1,
-                x + squareWidth() - 1, y + squareHeight() - 1);
-        g.drawLine(x + squareWidth() - 1, y + squareHeight() - 1,
-                x + squareWidth() - 1, y + 1);
-
+            g.setColor(color.darker());
+            g.drawLine(x + 1, y + squareHeight() - 1,
+                    x + squareWidth() - 1, y + squareHeight() - 1);
+            g.drawLine(x + squareWidth() - 1, y + squareHeight() - 1,
+                    x + squareWidth() - 1, y + 1);
+        } else {
+            ((Graphics2D) g).drawString("1", x+6, y-2);
+        }
     }
 
     class TAdapter extends KeyAdapter {
 
         @Override
         public void keyPressed(KeyEvent e) {
-
-            if (!isStarted || curPiece.getShape() == Tetrominoe.NoShape) {
+            if (!isStarted || curPiece.getShape() == Tetrominoe.NoShape)
                 return;
-            }
-
             int keycode = e.getKeyCode();
-
             if (keycode == 'P') {
                 pause();
                 return;
             }
-
             if (isPaused)
                 return;
-
             switch (keycode) {
-
                 case KeyEvent.VK_LEFT:
                     tryMove(curPiece, curX - 1, curY);
                     break;
-
                 case KeyEvent.VK_RIGHT:
                     tryMove(curPiece, curX + 1, curY);
                     break;
-
                 case KeyEvent.VK_DOWN:
                     tryMove(curPiece.rotateRight(), curX, curY);
                     break;
-
                 case KeyEvent.VK_UP:
                     tryMove(curPiece.rotateLeft(), curX, curY);
                     break;
-
                 case KeyEvent.VK_SPACE:
                     dropDown();
                     break;
