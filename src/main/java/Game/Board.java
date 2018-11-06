@@ -255,6 +255,11 @@ public class Board extends JPanel implements ActionListener {
         }
     }
 
+
+
+
+
+
     private void drawSquare(Graphics g, int x, int y, Tetrominoe shape)  {
 
         Color colors[] = { new Color(0, 0, 0), new Color(204, 102, 102),
@@ -282,6 +287,11 @@ public class Board extends JPanel implements ActionListener {
             ((Graphics2D) g).drawString("1", x+6, y-2);
         }
     }
+
+
+
+
+
 
     class TAdapter extends KeyAdapter {
 
