@@ -5,17 +5,34 @@ import java.util.Arrays;
 public class Neuron {
     private double bias;
     private double[] weights;
-    private Neuron[] outputs;
+    public double[] inputs;
+    private Neuron[] inputNeurons;
+    public int index = -1;
+    private double outputValue;
 
-    public Neuron(double[] weights, double bias) throws NeuronException {
+    public Neuron(double[] weights, double bias, int index) throws NeuronException {
         for(double d: weights)
             if(d>1||d<0)
-                throw new NeuronException(d>1?"Weight is too large":"Weight is too small");
+                throw new NeuronException(d>1?"Weight is too large":"Weight is too small"+": "+d);
         if(bias>1||bias<0)
             throw new NeuronException(bias>1?"Bias is too large":"Bias is too small");
         this.weights = weights;
         this.bias = bias;
-        outputs = null;
+        inputNeurons = null;
+        this.index = index;
+    }
+
+    public void initOutput(){
+        double total = 0;
+        for(int i =0;i<inputs.length;i++)
+            total+=inputs[i]*weights[i];
+        total+=bias;
+        System.out.println(total);
+        outputValue = sigmoid(total);
+    }
+
+    public void getOutput(){
+
     }
 
     public double[] getWeights(){
@@ -34,16 +51,12 @@ public class Neuron {
         this.weights = weights;
     }
 
-    public Neuron[] getOutputs() {
-        return outputs;
-    }
-
-    public void setOutputs(Neuron[] outputs) {
-        this.outputs = outputs;
+    public static double sigmoid(double x){
+        return 1./(1+Math.exp(-x));
     }
 
     @Override
     public String toString() {
-        return bias + Arrays.toString(weights) + Arrays.toString(outputs);
+        return bias + Arrays.toString(weights) + Arrays.toString(inputNeurons);
     }
 }

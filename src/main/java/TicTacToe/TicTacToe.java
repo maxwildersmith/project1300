@@ -19,6 +19,13 @@ public class TicTacToe {
         return true;
     }
 
+    public boolean checkRowWin(){
+        for(char[] c: board)
+            if(c[0]==c[1]&&c[1]==c[2])
+                return true;
+        return false;
+    }
+
     public void print(){
         for(char[] row : board){
             System.out.printf(" %c | %c | %c \n-----------\n",row[0],row[1],row[2]);

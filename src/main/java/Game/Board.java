@@ -11,7 +11,9 @@ public class Board extends JPanel implements ActionListener {
     private final int BOARD_WIDTH = 10;
     private final int BOARD_HEIGHT = 22;
     private final int DELAY = 400;
-    private final boolean DATA_VIEW = true;
+
+    public boolean DATA_VIEW = false;
+    public boolean GRID_VIEW = false;
 
     private Timer timer;
     private boolean isFallingFinished = false;
@@ -94,7 +96,7 @@ public class Board extends JPanel implements ActionListener {
         repaint();
     }
 
-    private void doDrawing(Graphics g) {
+    public void doDrawing(Graphics g) {
 
 
         Dimension size = getSize();
@@ -125,14 +127,14 @@ public class Board extends JPanel implements ActionListener {
                         curPiece.getShape());
             }
         }
-        if(DATA_VIEW) {
+        if(GRID_VIEW) {
             for (int col = 0; col < getSize().getWidth(); col += squareWidth()) {
-                g.drawLine(col, 0, col, BOARD_HEIGHT*squareHeight());
-                System.out.println(col);
+                g.drawLine(col, squareHeight(), col, (1+BOARD_HEIGHT)*squareHeight());
             }
             for (int row = 0; row < getSize().getHeight(); row += squareHeight())
-                g.drawLine(0, row, BOARD_WIDTH*squareWidth(), row);
+                g.drawLine(0, row+squareHeight(), BOARD_WIDTH*squareWidth(), row+squareHeight());
         }
+
     }
 
     @Override
