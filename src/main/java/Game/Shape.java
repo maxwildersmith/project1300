@@ -17,6 +17,9 @@ public class Shape {
         setShape(Tetrominoe.NoShape);
     }
 
+    
+
+
     public void setShape(Tetrominoe shape) {
 
         shapeList = new int[][][] {
@@ -36,6 +39,10 @@ public class Shape {
 
         pieceShape = shape;
     }
+
+
+
+
 
     private void setX(int index, int x) { coords[index][0] = x; }
     private void setY(int index, int y) { coords[index][1] = y; }
