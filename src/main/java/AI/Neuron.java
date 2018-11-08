@@ -3,9 +3,12 @@ package AI;
 import java.util.Arrays;
 
 public class Neuron {
+
+    public static final double UNASSIGNED_OUTPUT=-100;
+
     private double bias;
     private double[] weights;
-    public double[] inputs;
+    //public double[] inputs;
     private Neuron[] inputNeurons;
     public int index = -1;
     private double outputValue;
@@ -22,21 +25,42 @@ public class Neuron {
         this.index = index;
     }
 
+    public Neuron(){
+        outputValue = UNASSIGNED_OUTPUT;
+    }
+
     public void initOutput(){
         double total = 0;
-        for(int i =0;i<inputs.length;i++)
-            total+=inputs[i]*weights[i];
+        for(int i =0;i<inputNeurons.length;i++)
+            total+=inputNeurons[i].getOutput()*weights[i];
         total+=bias;
         System.out.println(total);
         outputValue = sigmoid(total);
     }
 
-    public void getOutput(){
+    public double getOutput(){
+        if(outputValue == UNASSIGNED_OUTPUT)
+            if(inputNeurons==null)
+                try {
+                    throw new NeuronException("Input neuron wasn't given input values!");
+                } catch (NeuronException e) {
+                    e.printStackTrace();
+                }
+            else
+                initOutput();
+        return outputValue;
+    }
 
+    public void reset(){
+        outputValue = UNASSIGNED_OUTPUT;
     }
 
     public double[] getWeights(){
         return weights;
+    }
+
+    public void setInputNeuronOutput(double out){
+        outputValue = out;
     }
 
     public double getBias() {
