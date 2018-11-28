@@ -4,6 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 
 public class Tetris extends JFrame {
 
@@ -14,8 +15,13 @@ public class Tetris extends JFrame {
     private JCheckBoxMenuItem debug, grid;
 
     public Tetris() {
-        initUI();
+        initUI(false);
     }
+    public Tetris(boolean computer){
+        initUI(computer);
+    }
+
+    public enum Move{Right, Left, RotateL, RotateR, Drop};
 
     private void initMenu(){
         menuBar = new JMenuBar();
@@ -47,7 +53,7 @@ public class Tetris extends JFrame {
         setJMenuBar(menuBar);
     }
 
-    private void initUI() {
+    private void initUI(boolean computer) {
 
         setResizable(false);
 
@@ -55,7 +61,7 @@ public class Tetris extends JFrame {
         statusbar.setHorizontalAlignment(SwingConstants.CENTER);
         add(statusbar, BorderLayout.SOUTH);
 
-        board = new Board(this);
+        board = new Board(this, computer);
         add(board);
         board.start();
 
@@ -64,6 +70,34 @@ public class Tetris extends JFrame {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         initMenu();
+    }
+
+    public void nextLine(){
+        board.actionPerformed(new ActionEvent("sd",0,"thing"));
+    }
+
+    public int getScore(){
+        return board.numLinesRemoved;
+    }
+
+    public void move(Move dir){
+        switch (dir){
+            case Left:
+                board.keyPressed(new KeyEvent(this,0,10,0,KeyEvent.VK_LEFT));
+                break;
+            case Right:
+                board.keyPressed(new KeyEvent(this,0,10,0,KeyEvent.VK_RIGHT));
+                break;
+            case RotateR:
+                board.keyPressed(new KeyEvent(this,0,10,0,KeyEvent.VK_DOWN));
+                break;
+            case RotateL:
+                board.keyPressed(new KeyEvent(this,0,10,0,KeyEvent.VK_UP));
+                break;
+            case Drop:
+                board.keyPressed(new KeyEvent(this,0,10,0,KeyEvent.VK_SPACE));
+                break;
+        }
     }
 
     public JLabel getStatusBar() {

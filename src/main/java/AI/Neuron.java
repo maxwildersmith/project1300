@@ -11,9 +11,21 @@ public class Neuron {
     //public double[] inputs;
     private Neuron[] inputNeurons;
     public int index = -1;
-    private double outputValue;
+    private double outputValue=UNASSIGNED_OUTPUT;
 
-    public Neuron(double[] weights, double bias, int index) throws NeuronException {
+    public Neuron(Neuron[] inputs, double[] weights, double bias, int index) throws NeuronException {
+        for(double d: weights)
+            if(d>1||d<0)
+                throw new NeuronException(d>1?"Weight is too large":"Weight is too small"+": "+d);
+        if(bias>1||bias<0)
+            throw new NeuronException(bias>1?"Bias is too large":"Bias is too small");
+        this.weights = weights;
+        this.bias = bias;
+        inputNeurons = inputs;
+        this.index = index;
+    }
+
+    public Neuron( double[] weights, double bias, int index) throws NeuronException {
         for(double d: weights)
             if(d>1||d<0)
                 throw new NeuronException(d>1?"Weight is too large":"Weight is too small"+": "+d);
@@ -27,6 +39,14 @@ public class Neuron {
 
     public Neuron(){
         outputValue = UNASSIGNED_OUTPUT;
+    }
+
+    public Neuron(double input, int index){
+        this.index = index;
+        outputValue = input;
+        inputNeurons=null;
+        bias=0;
+        weights=null;
     }
 
     public void initOutput(){
