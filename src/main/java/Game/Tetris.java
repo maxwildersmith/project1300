@@ -32,6 +32,7 @@ public class Tetris extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 board.DATA_VIEW = debug.getState();
+                board.repaint();
             }
         });
 
@@ -40,6 +41,7 @@ public class Tetris extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 board.GRID_VIEW = grid.getState();
+                board.repaint();
             }
         });
 
