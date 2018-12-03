@@ -82,6 +82,10 @@ public class Tetris extends JFrame {
         return board.numLinesRemoved;
     }
 
+    public int[] getData(){
+        return board.getBoardData();
+    }
+
     public void move(Move dir){
         switch (dir){
             case Left:

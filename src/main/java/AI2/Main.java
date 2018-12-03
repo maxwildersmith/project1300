@@ -2,35 +2,43 @@ package AI2;
 
 import Game.Tetris;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 public class Main {
     public static void main(String[] args) throws InterruptedException {
         int delay = 2;
-        Tetris game = new Tetris(true);
+        Tetris game = new Tetris(false);
         game.setVisible(true);
-        game.nextLine();
-        TimeUnit.SECONDS.sleep(delay);
-        game.move(Tetris.Move.Right);
-        game.nextLine();
-        TimeUnit.SECONDS.sleep(delay);
-        game.move(Tetris.Move.Right);
-        game.nextLine();
-        TimeUnit.SECONDS.sleep(delay);
-        game.move(Tetris.Move.Right);
-        game.nextLine();
-        TimeUnit.SECONDS.sleep(delay);
-        game.move(Tetris.Move.Right);
-        game.nextLine();
-        TimeUnit.SECONDS.sleep(delay);
-        game.move(Tetris.Move.Right);
-        game.nextLine();
-        TimeUnit.SECONDS.sleep(delay);
-        game.move(Tetris.Move.Right);
-        game.nextLine();
-        TimeUnit.SECONDS.sleep(delay);
-        game.move(Tetris.Move.Drop);
-        game.nextLine();
+        TimeUnit.SECONDS.sleep(delay*10);
+        System.out.println(Arrays.toString(game.getData()));
+
+//
+//        game.nextLine();
+//        System.out.println(Arrays.toString(game.getData()));
+//        TimeUnit.SECONDS.sleep(delay);
+//        game.move(Tetris.Move.Right);
+//        game.nextLine();
+//        TimeUnit.SECONDS.sleep(delay);
+//        game.move(Tetris.Move.Right);
+//        game.nextLine();
+//        TimeUnit.SECONDS.sleep(delay);
+//        game.move(Tetris.Move.Right);
+//        System.out.println(Arrays.toString(game.getData()));
+//        game.nextLine();
+//        TimeUnit.SECONDS.sleep(delay);
+//        game.move(Tetris.Move.Right);
+//        game.nextLine();
+//        TimeUnit.SECONDS.sleep(delay);
+//        game.move(Tetris.Move.Right);
+//        game.nextLine();
+//        TimeUnit.SECONDS.sleep(delay);
+//        game.move(Tetris.Move.Right);
+//        game.nextLine();
+//        TimeUnit.SECONDS.sleep(delay);
+//        game.move(Tetris.Move.Drop);
+//        game.nextLine();
 
     }
 }

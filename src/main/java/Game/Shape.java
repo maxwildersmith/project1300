@@ -12,13 +12,9 @@ public class Shape {
 
 
     public Shape() {
-
         coords = new int[4][2];
         setShape(Tetrominoe.NoShape);
     }
-
-    
-
 
     public void setShape(Tetrominoe shape) {
 
@@ -40,10 +36,6 @@ public class Shape {
         pieceShape = shape;
     }
 
-
-
-
-
     private void setX(int index, int x) { coords[index][0] = x; }
     private void setY(int index, int y) { coords[index][1] = y; }
     public int x(int index) { return coords[index][0]; }
@@ -51,7 +43,6 @@ public class Shape {
     public Tetrominoe getShape()  { return pieceShape; }
 
     public void setRandomShape() {
-
         Random r = new Random();
         int x = Math.abs(r.nextInt()) % 7 + 1;
         Tetrominoe[] values = Tetrominoe.values();
@@ -59,7 +50,6 @@ public class Shape {
     }
 
     public int minX() {
-
         int m = coords[0][0];
 
         for (int i=0; i < 4; i++)
@@ -70,7 +60,6 @@ public class Shape {
 
 
     public int minY() {
-
         int m = coords[0][1];
 
         for (int i=0; i < 4; i++)
@@ -80,7 +69,6 @@ public class Shape {
     }
 
     public Shape rotateLeft() {
-
         if (pieceShape == Tetrominoe.SquareShape)
             return this;
 
@@ -96,7 +84,6 @@ public class Shape {
     }
 
     public Shape rotateRight() {
-
         if (pieceShape == Tetrominoe.SquareShape)
             return this;
 

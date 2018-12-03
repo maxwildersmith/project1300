@@ -251,6 +251,10 @@ public class Board extends JPanel implements ActionListener, KeyListener {
         return true;
     }
 
+    /**
+     * Starts at the bottom of the board and checks if there are any empty boxes in each row. If there aren't then it adds
+     * one to the number of lines full
+     */
     private void removeFullLines() {
         int numFullLines = 0;
 
@@ -278,6 +282,17 @@ public class Board extends JPanel implements ActionListener, KeyListener {
             curPiece.setShape(Tetrominoe.NoShape);
             repaint();
         }
+    }
+
+    public int[] getBoardData(){
+        int[] data = new int[board.length];
+
+        for(int i=0;i<data.length;i++)
+            if(board[i].equals(Tetrominoe.NoShape))
+                data[i]=0;
+            else
+                data[i]=1;
+            return data;
     }
 
 
