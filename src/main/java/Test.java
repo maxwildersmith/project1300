@@ -1,23 +1,52 @@
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Scanner;
 import java.util.function.Consumer;
 
 public class Test{
+    private static class Coor{
+        double x,y;
+        public Coor(double x, double y){
+            this.x=x;
+            this.y=y;
+        }
+    }
 
 
     public static void main(String[] args) {
-        int[] thing = randomArray(5);
-        long[][] data = new long[3][15];
-        System.out.println(Arrays.toString(thing));
 
-        for(int i=0;i<data[0].length;i++){
-
-        }
-        timeMethod(thing, Test::bubbleSort, "Bubblesort");
-        timeMethod(thing, Arrays::sort, "Arrays.sort");
-        timeMethod(thing, Arrays::parallelSort, "Arrays.parallelSort");
+        Scanner in = new Scanner(System.in);
+        System.out.println(sym(in.nextInt()));
+//        System.out.println(in.hasNextInt() ? (""+(char)in.nextInt()).toUpperCase() : in.next().toUpperCase());
     }
+
+    public static boolean sym(int num){
+        char[] digits = (""+num).toCharArray();
+        for(int i=0;i<digits.length/2;i++)
+            if(digits[i]!=digits[digits.length-i-1])
+                return false;
+            return true;
+    }
+
+    public static int Fib(int max){
+        if(max<=2)
+            return 1;
+        return Fib(max-1)+Fib(max-2);
+    }
+
+//    public static void main(String[] args) {
+//        int[] thing = randomArray(5);
+//        long[][] data = new long[3][15];
+//        System.out.println(Arrays.toString(thing));
+//
+//        for(int i=0;i<data[0].length;i++){
+//
+//        }
+//        timeMethod(thing, Test::bubbleSort, "Bubblesort");
+//        timeMethod(thing, Arrays::sort, "Arrays.sort");
+//        timeMethod(thing, Arrays::parallelSort, "Arrays.parallelSort");
+//    }
 
     public static void bubbleSort(int[] t){
         boolean swapped = true;

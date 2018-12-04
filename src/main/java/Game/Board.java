@@ -8,6 +8,8 @@ import java.awt.event.*;
 
 public class Board extends JPanel implements ActionListener, KeyListener {
 
+    double[] genome;//for equation a*total filled + b*
+
     private final int BOARD_WIDTH = 10;
     private final int BOARD_HEIGHT = 22;
     private final int DELAY = 400;
@@ -137,6 +139,10 @@ public class Board extends JPanel implements ActionListener, KeyListener {
         }
 
         repaint();
+    }
+
+    public int fitness(){
+        return 0;
     }
 
     public void doDrawing(Graphics g) {
