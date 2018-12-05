@@ -1,5 +1,8 @@
 package Game;
 
+import AI2.Individual;
+import Genetics.Evolution;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -16,18 +19,21 @@ public class Tetris extends JFrame {
 
     private boolean comp, gameDone=false;
     private int timer;
+    private ActionListener parent;
 
 
-    public Tetris(boolean computer, int delay, double[] genome, int x, int y){
+    public Tetris(boolean computer, int delay, double[] genome, int x, int y, ActionListener parent){
         initUI(computer, delay,genome, x,y);
         comp = computer;
         timer=delay;
+        this.parent = parent;
     }
 
     public void gameDone(){
         if(gameDone)
             System.err.println("GAME FINISHED BUT ALREADY DONE!");
         gameDone=true;
+        parent.actionPerformed(new ActionEvent(this,ActionEvent.ACTION_PERFORMED,board.numLinesRemoved+""));
     }
 
     public boolean isGameDone(){
@@ -131,7 +137,6 @@ public class Tetris extends JFrame {
         board.start();
     }
     public void restart(double[] genome){
-        System.out.println("restart");
 //        board = new Board(this, comp, timer, new double[]{-.5,.76,-.35,-.18});
         board.genome = genome;
         gameDone=false;

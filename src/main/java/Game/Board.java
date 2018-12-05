@@ -284,6 +284,7 @@ public class Board extends JPanel implements ActionListener, KeyListener {
         for (int i = 0; i < 4; ++i) {
             x = xPos + curPiece.x(i);
             int y = yPos - curPiece.y(i);
+            if(y<22)
             newData[y][x]=1;
         }
 
@@ -327,7 +328,8 @@ public class Board extends JPanel implements ActionListener, KeyListener {
             curPiece.setShape(Tetrominoe.NoShape);
             timer.stop();
             isStarted = false;
-            statusbar.setText("Score: "+numLinesRemoved);
+            statusbar.setText(String.format("%d: %.2f,%.2f,%.2f,%.2f",numLinesRemoved,genome[0],genome[1],genome[2],genome[3]));
+            parent.gameDone();
         }
 
     }

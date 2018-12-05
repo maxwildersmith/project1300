@@ -2,22 +2,95 @@ package Genetics;
 
 import Game.Tetris;
 
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.*;
+import java.lang.reflect.Array;
+import java.lang.reflect.GenericArrayType;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
 import java.util.Scanner;
 
-public class Evolution {
+public class Evolution implements ActionListener {
 
-    private double mutationRate, mutationSeverity;
-    private int populationSize, championCount;
+    private double mutationRate, mutationSeverity, crossoverRate;
+    private int populationSize, championCount, generation;
+    Individual[] population;
+    private PrintWriter output;
 
-    private class Individual implements Comparable<Individual>{
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if(allDone())
+            endEpoch();
+    }
+
+    private boolean allDone(){
+        for(Individual i:population)
+            if(!i.isDone())
+                return false;
+        return true;
+    }
+
+    public void endEpoch() {
+        Arrays.sort(population);
+        System.out.println("Results of generation " + generation + ":\n" + Arrays.toString(population));
+        Date d = new Date();
+        output.printf("\n\n%d/%d/%d\t%d:%d:%d\n",d.getMonth(),d.getDate(),d.getYear(),d.getHours(),d.getMinutes(),d.getSeconds());
+        output.printf("Generation %d, highest score: %d, genome: %s\nOther individuals:\n",generation,population[0].score,Arrays.toString(population[0].genome));
+        for(int i=1;i<population.length;i++)
+            output.println(population[i]);
+        System.out.println("Best score: " + population[0].score + " with genome: " + Arrays.toString(population[0].genome) + "\nProceed? [y/n]: ");
+        Scanner in = new Scanner(System.in);
+        if (in.next().trim().toLowerCase().charAt(0) == 'n') {
+            System.out.println("Goodbye");
+            output.close();
+            System.exit(0);
+        }
+        Individual[] champions = new Individual[championCount];
+        for (int i = 0; i < championCount; i++)
+            champions[i] = population[i];
+
+        double[][] genomes = new double[populationSize][4];
+        int genesPerChamp = genomes.length / (championCount - 1);
+        for (int champ = 0; champ < championCount - 1; champ++)
+            for (int i = 0; i < genesPerChamp; i++)
+                genomes[i + (champ * genesPerChamp)] = crossover(population[champ], population[champ + 1]);
+        for (int i = 0; i < populationSize * mutationRate; i++){
+            //mutates random genes
+            int genome = (int) (Math.random() * genomes.length);
+            genomes[genome] = mutate(genomes[genome]);
+        }
+
+        genomes[genomes.length-1]=population[0].genome;//to allow the top champion to compete again w/o modification
+
+//        for(double[] gene: genomes){
+//            for(double d:gene)
+//                System.out.print(d+", ");
+//            System.out.println();
+//        }
+        generation++;
+        for(int i=0;i<population.length;i++)
+            population[i].restart(genomes[i]);
+
+    }
+
+    private class Individual implements Comparable<Individual>, ActionListener{
         public double[] genome;
         public int score;
         public Tetris game;
+        ActionListener parent;
 
-        public Individual(double[] genome, int score, int delay, int x,int y) {
+        public Individual(double[] genome, int score, int delay, int x,int y,ActionListener parent) {
             this.genome = genome;
             this.score = score;
-            game = new Tetris(true,delay,genome,x,y);
+            game = new Tetris(true,delay,genome,x,y,this);
+            this.parent=parent;
+        }
+
+        public void restart(double[] genome){
+            game.restart(genome);
         }
 
         public boolean isDone(){
@@ -26,26 +99,54 @@ public class Evolution {
 
         @Override
         public int compareTo(Individual o) {
-            return score-o.score;
+            return o.score-score;
+        }
+
+        @Override
+        public String toString(){
+            return "Score: "+score+"\tGenome:"+Arrays.toString(genome);
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            score=game.getScore();
+            parent.actionPerformed(e);
         }
     }
 
 
-    public Evolution(double mutationRate, double mutationSeverity, int populationSize, int championCount, int delay) {
+    public Evolution(double mutationRate, double mutationSeverity, int populationSize, int championCount, int delay, boolean save) {
         this.mutationRate = mutationRate;
         this.mutationSeverity = mutationSeverity;
         this.populationSize = populationSize;
         this.championCount = championCount;
 
-        Individual[] population = new Individual[populationSize];
+        if(save){
+            try {
+                output = new PrintWriter(new FileWriter("record.txt"));
+                Date d = new Date();
+                output.printf("Tetris AI: %d/%d/%d\t%d:%d:%d\n\n",d.getMonth(),d.getDate(),d.getYear(),d.getHours(),d.getMinutes(),d.getSeconds());
+                output.printf("Conditions:\nMutation rate: %f\nMutation severity: %f\nPopulation size: %d\nChampion count: %d\n\n\n",mutationRate,mutationSeverity,populationSize,championCount);
+            } catch (IOException e) {
+                System.err.println("Can't print to file, writing to console instead");
+                output = new PrintWriter(System.out);
+            }
+
+        }
+
+        population = new Individual[populationSize];
+
+        int maxAcross = Toolkit.getDefaultToolkit().getScreenSize().width/200;
         for(int i=0;i<populationSize;i++){
-            population[i]=new Individual(randomGenome(),0,delay,(i%10)*205,(i/10)*405);
+            population[i]=new Individual(randomGenome(),0,delay,(i%maxAcross)*200,(i/maxAcross)*400,this);
         }
     }
 
     private double[] mutate(double[] gene){
-        double change = (2*Math.random()+1)*mutationSeverity;
-        gene[(int)(Math.random()*4)]*=change;
+        for(int i=0;i<1+(int)(Math.random()*3*mutationRate);i++) {
+            double change = (2 * Math.random() + 1) * mutationSeverity;
+            gene[(int) (Math.random() * 4)] *= change;
+        }
         normalize(gene);
         return gene;
     }
@@ -59,6 +160,10 @@ public class Evolution {
         return gene;
     }
 
+    /**
+     * makes a gene's values out of 1 at most, so that all values are relative, does nothing if all values less than 1
+     * @param arr
+     */
     public static void normalize(double[] arr){
         double max=0;
         boolean lessThanOne = true;
@@ -70,15 +175,34 @@ public class Evolution {
         }
         if(lessThanOne)
             return;
-            for(int i=0;i<arr.length;i++)
-                arr[i]/=max;
+        for(int i=0;i<arr.length;i++)
+            arr[i]/=max;
+    }
+
+    /**
+     * Will perform a random amount of times, an operation to find a middle ground between champion genes
+     * @param parent1 greater fitness score
+     * @param parent2 lesser fitness score
+     * @return genome with a random gene merged from the parents with a favoring towards the better parents
+     */
+    private double[] crossover(Individual parent1, Individual parent2){
+        double[] genes = parent1.genome;
+        for(int i=0;i<1+(int)(Math.random()*3*mutationRate);i++) {
+            int gene = (int) (Math.random() * 4);
+            genes[gene]=((parent1.score*parent1.genome[gene])+(parent2.score*parent2.genome[gene]))/(parent1.score+parent2.score);
+        }
+        normalize(genes);
+        return genes;
     }
 
     public static void main(String[] args) {
         double mutationRate, mutationSeverity;
         int populationSize, championCount, delay;
         Scanner in = new Scanner(System.in);
-        System.out.println("Enter population size: ");
+        System.out.println("Record output? [y/n]: ");
+        boolean record=(in.next().trim().toLowerCase().charAt(0)=='y');
+        int maxDisplay = (Toolkit.getDefaultToolkit().getScreenSize().width/200)*(Toolkit.getDefaultToolkit().getScreenSize().height/400);
+        System.out.println("Enter population size(can show "+maxDisplay+" at most): ");
         populationSize = in.nextInt();
         System.out.println("Enter mutation rate(chance of mutation, 0-1): ");
         mutationRate = in.nextDouble();
@@ -86,10 +210,10 @@ public class Evolution {
         mutationSeverity = in.nextDouble();
         System.out.println("Enter amount of champions to choose: ");
         championCount = in.nextInt();
-        System.out.println("Enter ms delay between movement (10 min): ");
+        System.out.println("Enter ms delay between movement(200 minimum): ");
         delay = in.nextInt();
 
-        new Evolution(mutationRate,mutationSeverity,populationSize,championCount,delay);
+        new Evolution(mutationRate,mutationSeverity,populationSize,championCount,delay,record);
 
     }
 }
