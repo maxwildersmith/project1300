@@ -5,14 +5,17 @@ import Game.Shape.Tetrominoe;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 
 public class Board extends JPanel implements ActionListener, KeyListener {
 
-    double[] genome;//for equation a*total filled + b*
+    double[] genome;//for equation a*total height + b*lines cleared + c*holes + d*wells
 
     private final int BOARD_WIDTH = 10;
     private final int BOARD_HEIGHT = 22;
-    private final int DELAY = 400;
+    private int DELAY = 400;
 
     public boolean DATA_VIEW = false;
     public boolean GRID_VIEW = false;
@@ -26,12 +29,15 @@ public class Board extends JPanel implements ActionListener, KeyListener {
     private int curX = 0;
     private int curY = 0;
     private JLabel statusbar;
+    private Tetris parent;
     public Shape curPiece;
     private Tetrominoe[] board;
 
-    public Board(Tetris parent, boolean computer) {
+    public Board(Tetris parent, boolean computer, int delay, double[] genome) {
         //GRID_VIEW = computer;
         //DATA_VIEW = computer;
+        this.genome = genome;
+        DELAY = delay;
         COMPUTER = computer;
         initBoard(parent);
     }
@@ -41,12 +47,11 @@ public class Board extends JPanel implements ActionListener, KeyListener {
         setFocusable(true);
         curPiece = new Shape();
 
-        if(!COMPUTER) {
             timer = new Timer(DELAY, this);
             timer.start();
-        }
 
-        statusbar =  parent.getStatusBar();
+        this.parent = parent;
+        statusbar =  this.parent.getStatusBar();
         board = new Tetrominoe[BOARD_WIDTH * BOARD_HEIGHT];
 
         addKeyListener(this);
@@ -58,9 +63,12 @@ public class Board extends JPanel implements ActionListener, KeyListener {
 
     @Override
     public void keyPressed(KeyEvent e) {
+        int keycode = e.getKeyCode();
+        if(keycode=='R')
+            restart();
         if (!isStarted || curPiece.getShape() == Tetrominoe.NoShape)
             return;
-        int keycode = e.getKeyCode();
+
         if (keycode == 'P') {
             pause();
             return;
@@ -83,10 +91,11 @@ public class Board extends JPanel implements ActionListener, KeyListener {
             case KeyEvent.VK_SPACE:
                 dropDown();
                 break;
-
-            case 'R':
-                oneLineDown();
+            case KeyEvent.VK_M:
+                makeBestMove();
                 break;
+
+
         }
     }
 
@@ -95,11 +104,15 @@ public class Board extends JPanel implements ActionListener, KeyListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (isFallingFinished) {
-            isFallingFinished = false;
-            newPiece();
-        } else
-            oneLineDown();
+        if(COMPUTER)
+            makeBestMove();
+        else {
+            if (isFallingFinished) {
+                isFallingFinished = false;
+                newPiece();
+            } else
+                oneLineDown();
+        }
     }
 
     private int squareWidth() { return (int) getSize().getWidth() / BOARD_WIDTH; }
@@ -117,8 +130,7 @@ public class Board extends JPanel implements ActionListener, KeyListener {
         clearBoard();
 
         newPiece();
-        if(!COMPUTER)
-            timer.start();
+        timer.start();
     }
 
     private void pause()  {
@@ -129,11 +141,10 @@ public class Board extends JPanel implements ActionListener, KeyListener {
         isPaused = !isPaused;
 
         if (isPaused) {
-            if(!COMPUTER)
                 timer.stop();
             statusbar.setText("paused");
+            System.out.println(genomeToString()+"\n"+boardToString()+"\n"+swapToString());
         } else {
-            if(!COMPUTER)
                 timer.start();
             statusbar.setText(String.valueOf(numLinesRemoved));
         }
@@ -141,8 +152,55 @@ public class Board extends JPanel implements ActionListener, KeyListener {
         repaint();
     }
 
-    public int fitness(){
-        return 0;
+    private class Move implements Comparable<Move>{
+        public double score;
+        public int xPos;
+        public int rot;
+
+        public Move(double score, int xPos, int rot) {
+            this.score = score;
+            this.xPos = xPos;
+            this.rot = rot;
+        }
+
+        @Override
+        public String toString() {
+            return score + " at " + xPos;
+        }
+
+        @Override
+        public int compareTo(Move o) {
+            if(score==o.score)
+                return 0;
+            return (score-o.score<0)?1:-1;
+        }
+    }
+
+    public void makeBestMove(){
+
+        ArrayList<Move> scores = new ArrayList<>();
+
+        curY--;
+        for(int i=0;i<4;i++) {
+            while (tryMove(curPiece, curX - 1, curY)) ;
+            scores.add(new Move(fitness(simDropped(curPiece, curX)), curX, i));
+            while (tryMove(curPiece, curX + 1, curY)) {
+                scores.add(new Move(fitness(simDropped(curPiece, curX)), curX, i));
+            }
+            tryMove(curPiece, BOARD_WIDTH / 2, curY);
+            curPiece=curPiece.rotateRight();
+        }
+
+        Collections.sort(scores);
+        for(int i=0;i<scores.get(0).rot;i++)
+            curPiece=curPiece.rotateRight();
+
+        tryMove(curPiece,scores.get(0).xPos,curY);
+        dropDown();
+    }
+
+    public double fitness(int[][] data){
+        return (genome[0]* getTotalBlocks(data))+(genome[1]*getLinesCleared(data))+(genome[2]*getHoleCount(data))+(genome[3]*getWells(data));
     }
 
     public void doDrawing(Graphics g) {
@@ -192,11 +250,12 @@ public class Board extends JPanel implements ActionListener, KeyListener {
     private void dropDown() {
         int newY = curY;
 
-        while (newY > 0) {
+        while (newY > 0)
             if (!tryMove(curPiece, curX, newY - 1))
                 break;
-            --newY;
-        }
+            else
+                --newY;
+
         pieceDropped();
     }
 
@@ -205,10 +264,42 @@ public class Board extends JPanel implements ActionListener, KeyListener {
             pieceDropped();
     }
 
-
     private void clearBoard() {
         for (int i = 0; i < BOARD_HEIGHT * BOARD_WIDTH; ++i)
             board[i] = Tetrominoe.NoShape;
+    }
+
+    private int[][] simDropped(Shape shape, int xPos){
+        int[][] newData = getBoardData();
+
+
+        int x=xPos, yPos=curY;
+        while(yPos>0)
+            if(!canPlace(shape,x,yPos)) {
+                break;
+            }
+            else
+                --yPos;
+            yPos++;
+        for (int i = 0; i < 4; ++i) {
+            x = xPos + curPiece.x(i);
+            int y = yPos - curPiece.y(i);
+            newData[y][x]=1;
+        }
+
+        return newData;
+    }
+
+    private boolean canPlace(Shape shape, int xPos, int yPos){
+        for (int i = 0; i < 4; ++i) {
+            int x = xPos + shape.x(i);
+            int y = yPos - shape.y(i);
+            if (x < 0 || x >= BOARD_WIDTH || y < 0 || y >= BOARD_HEIGHT)
+                return false;
+            if (shapeAt(x, y) != Tetrominoe.NoShape)
+                return false;
+        }
+        return true;
     }
 
     private void pieceDropped() {
@@ -226,15 +317,19 @@ public class Board extends JPanel implements ActionListener, KeyListener {
 
     private void newPiece()  {
         curPiece.setRandomShape();
-        curX = BOARD_WIDTH / 2 + 1;
+        curX = BOARD_WIDTH/2;
         curY = BOARD_HEIGHT - 1 + curPiece.minY();
+
+        statusbar.setText(numLinesRemoved+" lines, "+fitness(getBoardData())+" fitness");
+
 
         if (!tryMove(curPiece, curX, curY)) {
             curPiece.setShape(Tetrominoe.NoShape);
             timer.stop();
             isStarted = false;
-            statusbar.setText("game over");
+            statusbar.setText("Score: "+numLinesRemoved);
         }
+
     }
 
     public boolean tryMove(Shape newPiece, int newX, int newY) {
@@ -284,27 +379,125 @@ public class Board extends JPanel implements ActionListener, KeyListener {
         if (numFullLines > 0) {
             numLinesRemoved += numFullLines;
             statusbar.setText(numLinesRemoved + " lines cleared");
+            if(!COMPUTER)
             isFallingFinished = true;
             curPiece.setShape(Tetrominoe.NoShape);
             repaint();
         }
     }
 
-    public int[] getBoardData(){
-        int[] data = new int[board.length];
+    public int[][] getBoardData(){
+        int[][] data = new int[BOARD_HEIGHT][BOARD_WIDTH];
 
         for(int i=0;i<data.length;i++)
-            if(board[i].equals(Tetrominoe.NoShape))
-                data[i]=0;
-            else
-                data[i]=1;
+            for(int j=0;j<data[i].length;j++)
+                if(board[(BOARD_WIDTH*i)+j].equals(Tetrominoe.NoShape))
+                    data[i][j]=0;
+                else
+                    data[i][j]=1;
             return data;
     }
 
+    public String boardToString(){
+        String out="";
+        for(int[] row:getBoardData()) {
+            for (int box : row)
+                out += "|" + box + "|";
+            out += "\n";
+        }
+        return out;
+    }
 
+    public String dataToString(int[][] data){
+        String out="";
+        for(int[] row:data) {
+            for (int box : row)
+                out += "|" + box + "|";
+            out += "\n";
+        }
+        return out;
+    }
 
+    public String swapToString(){
+        String out="";
+        for(int[] row:swapXY(getBoardData())) {
+            for (int box : row)
+                out += "|" + box + "|";
+            out += "\n";
+        }
+        return out;
+    }
 
+    public String genomeToString(){
+        return "Blocks: "+ getTotalBlocks(getBoardData())+"\tLines: "+numLinesRemoved+"\tHoles: "+getHoleCount(getBoardData())+"\tWell score: "+getWells(getBoardData());
+    }
 
+    public static boolean arrayHas(int[] arr, int i){
+        for(int x: arr)
+            if(x==i)
+                return true;
+            return false;
+    }
+
+    private int getWells(int[][] boardData) {
+        int firstEmpty=0;
+        int[][] data = boardData;
+        for(int i=0;i<data.length;i++)
+            if(!arrayHas(data[i],1)){
+                firstEmpty = i;
+                break;
+            }
+        return (firstEmpty*BOARD_WIDTH)-getHoleCount(boardData)-getTotalBlocks(boardData);
+    }
+
+    public static int arrSum(int[] arr){
+        int total=0;
+        for(int i:arr)
+            total+=i;
+        return total;
+    }
+
+    private int getHoleCount(int[][] boardData) {
+        int[][] data = swapXY(boardData);
+        int[] colHoleTotal = new int[BOARD_WIDTH];
+        row:
+        for(int j=0;j<data.length;j++)
+            for(int i=data[j].length-1;i>=0;i--)
+                if(data[j][i]==1){
+                    colHoleTotal[j]=i;
+                    continue row;
+                }
+                for(int i=0;i<colHoleTotal.length;i++)
+                    colHoleTotal[i]+=1-arrSum(data[i]);
+        return arrSum(colHoleTotal);
+    }
+
+    private int getLinesCleared(int[][] boardData){
+        int lines=0;
+        for(int[] row: boardData)
+            if(arrSum(row)==BOARD_WIDTH)
+                lines++;
+            return lines+numLinesRemoved;
+    }
+
+    private int getTotalBlocks(int[][] boardData) {
+        int total=0;
+        for(int[] row:boardData)
+                total+=arrSum(row);
+        return total;
+    }
+
+    public static int[][] swapXY(int[][] array){
+        int[][] swapped = new int[array[0].length][array.length];
+        for(int i=0;i<array.length;i++)
+            for(int j=0;j<array[0].length;j++)
+                swapped[j][i]=array[i][j];
+            return swapped;
+    }
+
+    private void restart(){
+        parent.restart();
+    }
 
     private void drawSquare(Graphics g, int x, int y, Tetrominoe shape)  {
         Color colors[] = { new Color(0, 0, 0), new Color(204, 102, 102),

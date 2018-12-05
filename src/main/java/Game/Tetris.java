@@ -14,11 +14,24 @@ public class Tetris extends JFrame {
     private JMenu view, file;
     private JCheckBoxMenuItem debug, grid;
 
-    public Tetris() {
-        initUI(false);
+    private boolean comp, gameDone=false;
+    private int timer;
+
+
+    public Tetris(boolean computer, int delay, double[] genome, int x, int y){
+        initUI(computer, delay,genome, x,y);
+        comp = computer;
+        timer=delay;
     }
-    public Tetris(boolean computer){
-        initUI(computer);
+
+    public void gameDone(){
+        if(gameDone)
+            System.err.println("GAME FINISHED BUT ALREADY DONE!");
+        gameDone=true;
+    }
+
+    public boolean isGameDone(){
+        return gameDone;
     }
 
     public enum Move{Right, Left, RotateL, RotateR, Drop};
@@ -55,23 +68,23 @@ public class Tetris extends JFrame {
         setJMenuBar(menuBar);
     }
 
-    private void initUI(boolean computer) {
-
+    private void initUI(boolean computer, int delay, double[] genome, int x,int y) {
         setResizable(false);
 
         statusbar = new JLabel("Start!");
         statusbar.setHorizontalAlignment(SwingConstants.CENTER);
         add(statusbar, BorderLayout.SOUTH);
 
-        board = new Board(this, computer);
+        board = new Board(this, computer, delay, genome);
         add(board);
         board.start();
 
         setTitle("Tetris");
         setSize(200, 400);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
+        setLocation(x,y);
         initMenu();
+        setVisible(true);
     }
 
     public void nextLine(){
@@ -82,9 +95,10 @@ public class Tetris extends JFrame {
         return board.numLinesRemoved;
     }
 
-    public int[] getData(){
-        return board.getBoardData();
+    public double[] getGenome(){
+        return board.genome;
     }
+
 
     public void move(Move dir){
         switch (dir){
@@ -111,17 +125,17 @@ public class Tetris extends JFrame {
     }
 
     public void restart(){
-        Tetris game = new Tetris();
-        game.setVisible(true);
-        Tetris.this.dispose();
+        System.out.println("restart");
+//        board = new Board(this, comp, timer, new double[]{-.5,.76,-.35,-.18});
+        gameDone=false;
+        board.start();
     }
+    public void restart(double[] genome){
+        System.out.println("restart");
+//        board = new Board(this, comp, timer, new double[]{-.5,.76,-.35,-.18});
+        board.genome = genome;
+        gameDone=false;
+        board.start();
 
-    public static void main(String[] args) {
-
-        EventQueue.invokeLater(() -> {
-
-            Tetris game = new Tetris();
-            game.setVisible(true);
-        });
     }
 }
