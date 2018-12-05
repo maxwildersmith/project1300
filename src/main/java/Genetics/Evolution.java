@@ -8,10 +8,7 @@ import java.awt.event.ActionListener;
 import java.io.*;
 import java.lang.reflect.Array;
 import java.lang.reflect.GenericArrayType;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Scanner;
+import java.util.*;
 
 public class Evolution implements ActionListener {
 
@@ -19,6 +16,8 @@ public class Evolution implements ActionListener {
     private int populationSize, championCount, generation;
     Individual[] population;
     private PrintWriter output;
+    private char seed;
+    private long universalSeed=-1;
 
     @Override
     public void actionPerformed(ActionEvent e) {
@@ -36,16 +35,19 @@ public class Evolution implements ActionListener {
     public void endEpoch() {
         Arrays.sort(population);
         System.out.println("Results of generation " + generation + ":\n" + Arrays.toString(population));
-        Date d = new Date();
-        output.printf("\n\n%d/%d/%d\t%d:%d:%d\n",d.getMonth(),d.getDate(),d.getYear(),d.getHours(),d.getMinutes(),d.getSeconds());
-        output.printf("Generation %d, highest score: %d, genome: %s\nOther individuals:\n",generation,population[0].score,Arrays.toString(population[0].genome));
-        for(int i=1;i<population.length;i++)
-            output.println(population[i]);
+        if(output!=null) {
+            Date d = new Date();
+            output.printf("\n\n%d/%d/%d\t%d:%d:%d\n", d.getMonth(), d.getDate(), d.getYear(), d.getHours(), d.getMinutes(), d.getSeconds());
+            output.printf("Generation %d, highest score: %d, genome: %s\nOther individuals:\n", generation, population[0].score, Arrays.toString(population[0].genome));
+            for (int i = 1; i < population.length; i++)
+                output.println(population[i]);
+        }
         System.out.println("Best score: " + population[0].score + " with genome: " + Arrays.toString(population[0].genome) + "\nProceed? [y/n]: ");
         Scanner in = new Scanner(System.in);
         if (in.next().trim().toLowerCase().charAt(0) == 'n') {
             System.out.println("Goodbye");
-            output.close();
+            if(output!=null)
+                output.close();
             System.exit(0);
         }
         Individual[] champions = new Individual[championCount];
@@ -71,9 +73,16 @@ public class Evolution implements ActionListener {
 //            System.out.println();
 //        }
         generation++;
+        long seedValue= new Random().nextLong();
         for(int i=0;i<population.length;i++)
-            population[i].restart(genomes[i]);
-
+            if(seed=='y') {
+                population[i].restart(genomes[i],seedValue);
+            } else if(seed=='a') {
+                if (universalSeed < 0)
+                    universalSeed = new Random().nextLong();
+                population[i].restart(genomes[i], universalSeed);
+            } else
+                population[i].restart(genomes[i],new Random().nextLong());
     }
 
     private class Individual implements Comparable<Individual>, ActionListener{
@@ -82,15 +91,15 @@ public class Evolution implements ActionListener {
         public Tetris game;
         ActionListener parent;
 
-        public Individual(double[] genome, int score, int delay, int x,int y,ActionListener parent) {
+        public Individual(double[] genome, int score, int delay, int x,int y,ActionListener parent, long seed) {
             this.genome = genome;
             this.score = score;
-            game = new Tetris(true,delay,genome,x,y,this);
+            game = new Tetris(true,delay,genome,x,y,this, seed);
             this.parent=parent;
         }
 
-        public void restart(double[] genome){
-            game.restart(genome);
+        public void restart(double[] genome, long seed){
+            game.restart(genome, seed);
         }
 
         public boolean isDone(){
@@ -115,11 +124,12 @@ public class Evolution implements ActionListener {
     }
 
 
-    public Evolution(double mutationRate, double mutationSeverity, int populationSize, int championCount, int delay, boolean save) {
+    public Evolution(double mutationRate, double mutationSeverity, int populationSize, int championCount, int delay, boolean save, char seed) {
         this.mutationRate = mutationRate;
         this.mutationSeverity = mutationSeverity;
         this.populationSize = populationSize;
         this.championCount = championCount;
+        this.seed = seed;
 
         if(save){
             try {
@@ -137,13 +147,26 @@ public class Evolution implements ActionListener {
         population = new Individual[populationSize];
 
         int maxAcross = Toolkit.getDefaultToolkit().getScreenSize().width/200;
+        long seedValue= new Random().nextLong();
         for(int i=0;i<populationSize;i++){
-            population[i]=new Individual(randomGenome(),0,delay,(i%maxAcross)*200,(i/maxAcross)*400,this);
+            if(seed=='y') {
+                population[i] = new Individual(randomGenome(), 0, delay, (i % maxAcross) * 200, (i / maxAcross) * 400, this,seedValue);
+            } else if(seed=='a') {
+                if (universalSeed < 0)
+                    universalSeed = new Random().nextLong();
+                population[i] = new Individual(randomGenome(), 0, delay, (i % maxAcross) * 200, (i / maxAcross) * 400, this, universalSeed);
+            } else
+                population[i] = new Individual(randomGenome(), 0, delay, (i % maxAcross) * 200, (i / maxAcross) * 400, this,new Random().nextLong());
+
+
         }
+
     }
 
     private double[] mutate(double[] gene){
-        for(int i=0;i<1+(int)(Math.random()*3*mutationRate);i++) {
+        if(Math.random()*populationSize<populationSize*mutationRate)
+            return randomGenome();
+        for(int i=0;i<1+(int)(Math.random()*10*mutationRate);i++) {
             double change = (2 * Math.random() + 1) * mutationSeverity;
             gene[(int) (Math.random() * 4)] *= change;
         }
@@ -187,10 +210,11 @@ public class Evolution implements ActionListener {
      */
     private double[] crossover(Individual parent1, Individual parent2){
         double[] genes = parent1.genome;
-        for(int i=0;i<1+(int)(Math.random()*3*mutationRate);i++) {
+        for(int i=0;i<1+(int)(Math.random()*3);i++) {
             int gene = (int) (Math.random() * 4);
-            genes[gene]=((parent1.score*parent1.genome[gene])+(parent2.score*parent2.genome[gene]))/(parent1.score+parent2.score);
+            genes[gene]=((parent1.score*parent1.genome[gene])+(parent2.score*parent2.genome[gene])+1)/(1+parent1.score+parent2.score);
         }
+        System.out.println("\n");
         normalize(genes);
         return genes;
     }
@@ -200,20 +224,26 @@ public class Evolution implements ActionListener {
         int populationSize, championCount, delay;
         Scanner in = new Scanner(System.in);
         System.out.println("Record output? [y/n]: ");
-        boolean record=(in.next().trim().toLowerCase().charAt(0)=='y');
+        boolean record = (in.next().trim().toLowerCase().charAt(0) == 'y');
         int maxDisplay = (Toolkit.getDefaultToolkit().getScreenSize().width/200)*(Toolkit.getDefaultToolkit().getScreenSize().height/400);
         System.out.println("Enter population size(can show "+maxDisplay+" at most): ");
         populationSize = in.nextInt();
         System.out.println("Enter mutation rate(chance of mutation, 0-1): ");
         mutationRate = in.nextDouble();
+        if(mutationRate>1||mutationRate<0){
+            System.out.println("Enter mutation rate between 0 and 1(chance of mutation, 0-1): ");
+            mutationRate = in.nextDouble();
+        }
         System.out.println("Enter mutation severity(% change of mutation, 0-1): ");
         mutationSeverity = in.nextDouble();
         System.out.println("Enter amount of champions to choose: ");
         championCount = in.nextInt();
         System.out.println("Enter ms delay between movement(200 minimum): ");
         delay = in.nextInt();
+        System.out.println("Same seed?(Should all ind. play the same game[y], should all generations play the same game?[a]: ");
+        char seed = in.next().trim().toLowerCase().charAt(0);
 
-        new Evolution(mutationRate,mutationSeverity,populationSize,championCount,delay,record);
+        new Evolution(mutationRate,mutationSeverity,populationSize,championCount,delay,record,seed);
 
     }
 }

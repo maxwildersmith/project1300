@@ -8,6 +8,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.util.Random;
 
 public class Tetris extends JFrame {
 
@@ -22,8 +23,8 @@ public class Tetris extends JFrame {
     private ActionListener parent;
 
 
-    public Tetris(boolean computer, int delay, double[] genome, int x, int y, ActionListener parent){
-        initUI(computer, delay,genome, x,y);
+    public Tetris(boolean computer, int delay, double[] genome, int x, int y, ActionListener parent, long seed){
+        initUI(computer, delay,genome, x,y, seed);
         comp = computer;
         timer=delay;
         this.parent = parent;
@@ -74,17 +75,18 @@ public class Tetris extends JFrame {
         setJMenuBar(menuBar);
     }
 
-    private void initUI(boolean computer, int delay, double[] genome, int x,int y) {
+    private void initUI(boolean computer, int delay, double[] genome, int x,int y, long seed) {
         setResizable(false);
 
         statusbar = new JLabel("Start!");
         statusbar.setHorizontalAlignment(SwingConstants.CENTER);
         add(statusbar, BorderLayout.SOUTH);
 
-        board = new Board(this, computer, delay, genome);
+        board = new Board(this, computer, delay, genome, seed);
         add(board);
         board.start();
 
+        setAlwaysOnTop(true);
         setTitle("Tetris");
         setSize(200, 400);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -136,9 +138,10 @@ public class Tetris extends JFrame {
         gameDone=false;
         board.start();
     }
-    public void restart(double[] genome){
+    public void restart(double[] genome,long seed){
 //        board = new Board(this, comp, timer, new double[]{-.5,.76,-.35,-.18});
         board.genome = genome;
+        board.rand = new Random(seed);
         gameDone=false;
         board.start();
 

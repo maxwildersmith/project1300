@@ -8,6 +8,7 @@ import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Random;
 
 public class Board extends JPanel implements ActionListener, KeyListener {
 
@@ -33,13 +34,16 @@ public class Board extends JPanel implements ActionListener, KeyListener {
     public Shape curPiece;
     private Tetrominoe[] board;
 
-    public Board(Tetris parent, boolean computer, int delay, double[] genome) {
+    public Random rand;
+
+    public Board(Tetris parent, boolean computer, int delay, double[] genome, long seed) {
         //GRID_VIEW = computer;
         //DATA_VIEW = computer;
         this.genome = genome;
         DELAY = delay;
         COMPUTER = computer;
         initBoard(parent);
+        rand = new Random(seed);
     }
 
     private void initBoard(Tetris parent) {
@@ -317,18 +321,18 @@ public class Board extends JPanel implements ActionListener, KeyListener {
     }
 
     private void newPiece()  {
-        curPiece.setRandomShape();
+        curPiece.setShape(Tetrominoe.values()[rand.nextInt(7)+1]);
         curX = BOARD_WIDTH/2;
         curY = BOARD_HEIGHT - 1 + curPiece.minY();
 
-        statusbar.setText(numLinesRemoved+" lines, "+fitness(getBoardData())+" fitness");
+        statusbar.setText(String.format("%d |%.2f| %.2f,%.2f,%.2f,%.2f",numLinesRemoved,fitness(getBoardData()),genome[0],genome[1],genome[2],genome[3]));
 
 
         if (!tryMove(curPiece, curX, curY)) {
             curPiece.setShape(Tetrominoe.NoShape);
             timer.stop();
+            statusbar.setText(String.format("%d: %.3f,%.3f,%.3f,%.3f",numLinesRemoved,genome[0],genome[1],genome[2],genome[3]));
             isStarted = false;
-            statusbar.setText(String.format("%d: %.2f,%.2f,%.2f,%.2f",numLinesRemoved,genome[0],genome[1],genome[2],genome[3]));
             parent.gameDone();
         }
 

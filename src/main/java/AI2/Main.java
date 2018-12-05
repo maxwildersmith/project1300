@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
 public class Main {
     public static void main(String[] args) throws InterruptedException {
         int delay = 2;
-        Tetris game = new Tetris(true,200,new double[]{-.51,.7606,-.3566,-.1844},0,0,null);
+//        Tetris game = new Tetris(true,200,new double[]{-.51,.7606,-.3566,-.1844},0,0,null,0);
 
 //
 //        game.nextLine();
